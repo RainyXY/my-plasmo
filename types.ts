@@ -12,137 +12,137 @@ export interface Network {
 
 export const DEFAULT_NETWORKS: Network[] = [
   {
-    id: 'eth-mainnet',
-    name: 'Ethereum Mainnet',
+    id: "eth-mainnet",
+    name: "Ethereum Mainnet",
     chainId: 1,
-    rpcUrl: 'https://cloudflare-eth.com',
-    currency: 'ETH'
+    rpcUrl: "https://cloudflare-eth.com",
+    currency: "ETH"
   },
   {
-    id: 'sepolia-testnet',
-    name: 'Sepolia Testnet',
+    id: "sepolia-testnet",
+    name: "Sepolia Testnet",
     chainId: 11155111,
-    rpcUrl: 'https://sepolia.infura.io/v3/9aa3d95b3bc440fa88ea12eaa4456161',
-    currency: 'ETH'
+    rpcUrl: "https://ethereum-sepolia-rpc.publicnode.com",
+    currency: "ETH"
   },
   {
-    id: 'arbitrum-mainnet',
-    name: 'Arbitrum One',
+    id: "arbitrum-mainnet",
+    name: "Arbitrum One",
     chainId: 42161,
-    rpcUrl: 'https://arb1.arbitrum.io/rpc',
-    currency: 'ETH'
+    rpcUrl: "https://arb1.arbitrum.io/rpc",
+    currency: "ETH"
   },
   {
-    id: 'optimism-mainnet',
-    name: 'Optimism',
+    id: "optimism-mainnet",
+    name: "Optimism",
     chainId: 10,
-    rpcUrl: 'https://mainnet.optimism.io',
-    currency: 'ETH'
+    rpcUrl: "https://mainnet.optimism.io",
+    currency: "ETH"
   }
 ]
 
-export type PopupRoute = 
-  | 'main' 
-  | 'create' 
-  | 'import' 
-  | 'show' 
-  | 'unlock' 
-  | 'auth' 
-  | 'sign'
-  | 'switch-chain'
-  | 'transaction'
-  | 'add-chain'
-  | 'watch-asset'
-  | 'send' 
-  | 'receive' 
-  | 'networks' 
-  | 'add-network'
-  | 'tokens'
-  | 'nfts'
-  | 'send-token'
-  | 'transfer-nft';
+export type PopupRoute =
+  | "main"
+  | "create"
+  | "import"
+  | "show"
+  | "unlock"
+  | "auth"
+  | "sign"
+  | "switch-chain"
+  | "transaction"
+  | "add-chain"
+  | "watch-asset"
+  | "send"
+  | "receive"
+  | "networks"
+  | "add-network"
+  | "tokens"
+  | "nfts"
+  | "send-token"
+  | "transfer-nft"
 
 export interface AuthRequest {
-  requestId: string;
-  origin: string;
-  timestamp: number;
+  requestId: string
+  origin: string
+  timestamp: number
 }
 
 export interface SignRequest {
-  requestId: string;
-  origin: string;
-  method: string; // 'eth_sign' | 'personal_sign' | 'eth_signTypedData' | 'eth_signTypedData_v3' | 'eth_signTypedData_v4'
-  address: string;
-  message?: string; // 用于 eth_sign 和 personal_sign
+  requestId: string
+  origin: string
+  method: string // 'eth_sign' | 'personal_sign' | 'eth_signTypedData' | 'eth_signTypedData_v3' | 'eth_signTypedData_v4'
+  address: string
+  message?: string // 用于 eth_sign 和 personal_sign
   typedData?: {
-    domain: any;
-    types: any;
-    message: any;
-    primaryType?: string;
-  }; // 用于 EIP-712 签名
-  timestamp: number;
+    domain: any
+    types: any
+    message: any
+    primaryType?: string
+  } // 用于 EIP-712 签名
+  timestamp: number
 }
 
 export interface SwitchChainRequest {
-  requestId: string;
-  origin: string;
-  chainId: string;
+  requestId: string
+  origin: string
+  chainId: string
   targetNetwork: {
-    id: string;
-    name: string;
-    chainId: number;
-    currencySymbol: string;
-  } | null;
-  timestamp: number;
+    id: string
+    name: string
+    chainId: number
+    currencySymbol: string
+  } | null
+  timestamp: number
 }
 
 export interface TransactionRequest {
-  requestId: string;
-  origin: string;
-  method: string; // 'eth_sendTransaction' | 'eth_signTransaction'
+  requestId: string
+  origin: string
+  method: string // 'eth_sendTransaction' | 'eth_signTransaction'
   transaction: {
-    from?: string;
-    to?: string;
-    value?: string;
-    data?: string;
-    gas?: string;
-    gasPrice?: string;
-    maxFeePerGas?: string;
-    maxPriorityFeePerGas?: string;
-    nonce?: string;
-    chainId?: string;
-  };
-  timestamp: number;
+    from?: string
+    to?: string
+    value?: string
+    data?: string
+    gas?: string
+    gasPrice?: string
+    maxFeePerGas?: string
+    maxPriorityFeePerGas?: string
+    nonce?: string
+    chainId?: string
+  }
+  timestamp: number
 }
 
 export interface AddChainRequest {
-  requestId: string;
-  origin: string;
+  requestId: string
+  origin: string
   chainParams: {
-    chainId: string;
-    chainName: string;
+    chainId: string
+    chainName: string
     nativeCurrency: {
-      name: string;
-      symbol: string;
-      decimals: number;
-    };
-    rpcUrls: string[];
-    blockExplorerUrls?: string[];
-  };
-  timestamp: number;
+      name: string
+      symbol: string
+      decimals: number
+    }
+    rpcUrls: string[]
+    blockExplorerUrls?: string[]
+  }
+  timestamp: number
 }
 
 export interface WatchAssetRequest {
-  requestId: string;
-  origin: string;
+  requestId: string
+  origin: string
   assetParams: {
-    type: string;
+    type: string
     options: {
-      address: string;
-      symbol?: string;
-      decimals?: number;
-      image?: string;
-    };
-  };
-  timestamp: number;
+      address: string
+      symbol?: string
+      decimals?: number
+      image?: string
+    }
+  }
+  timestamp: number
 }
