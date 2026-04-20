@@ -3,6 +3,10 @@ import { useEffect, useState } from "react"
 import CreateWallet from "~pages/CreateWallet"
 import ImportWallet from "~pages/ImportWallet"
 import NetworksPage from "~pages/NetworksPage"
+import NFTs from "~pages/NFTs"
+import Receive from "~pages/Receive"
+import Send from "~pages/Send"
+import Tokens from "~pages/Tokens"
 import WalletShow from "~pages/WalletShow"
 
 import "./style.css" // 引入样式
@@ -77,6 +81,22 @@ export default function Popup() {
 
   if (currentRoute === "networks") {
     return <NetworksPage onBack={() => onBack("show")} />
+  }
+
+  if (currentRoute === "send") {
+    return <Send onBack={() => onBack("show")} />
+  }
+
+  if (currentRoute === "receive") {
+    return <Receive onBack={() => onBack("show")} />
+  }
+
+  if (currentRoute === "tokens") {
+    return <Tokens onBack={() => onBack("show")} />
+  }
+
+  if (currentRoute === "nfts") {
+    return <NFTs onBack={() => onBack("show")} />
   }
 
   return (
