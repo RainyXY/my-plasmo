@@ -61,8 +61,7 @@ export default function Send({ onBack }: SendProps) {
       console.log("交易金额 (Wei):", "0x" + valueWei)
 
       const response = await chrome.runtime.sendMessage({
-        type: "EIP1193_REQUEST",
-        method: "eth_sendTransaction",
+        type: "SEND_ETH",
         params: [
           {
             from: wallet.address,
