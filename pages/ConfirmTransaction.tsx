@@ -82,7 +82,7 @@ export default function ConfirmTransaction({
           <label className="block text-xs font-medium text-gray-500 mb-1">
             网络
           </label>
-          <div className="text-sm text-gray-900 font-mono  break-all">
+          <div className="text-sm text-gray-900 font-mono break-all">
             {displayOrigin}
           </div>
         </div>
@@ -90,7 +90,7 @@ export default function ConfirmTransaction({
           <label className="block text-xs font-medium text-gray-500 mb-1">
             发送账户
           </label>
-          <div className="text-sm text-gray-900 font-mono  break-all">
+          <div className="text-sm text-gray-900 font-mono break-all">
             {wallet?.address}
           </div>
         </div>

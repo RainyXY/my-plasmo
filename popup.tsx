@@ -101,7 +101,7 @@ export default function Popup() {
   }
 
   if (currentRoute === "receive") {
-    return <Receive onBack={() => onBack("show")} />
+    return <Receive onBack={() => onBack("show")} onNavigate={onNavigate} />
   }
 
   if (currentRoute === "tokens") {
