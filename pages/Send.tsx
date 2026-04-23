@@ -2,18 +2,19 @@ import { useState } from "react"
 
 import { useBalance } from "~hooks/useBalance"
 import { useWalletStore } from "~stores/wallet"
+import type { PopupRoute } from "~types"
 
 interface SendProps {
   onBack: () => void
+  onNavigate?: (route: PopupRoute) => void
 }
 
-export default function Send({ onBack }: SendProps) {
+export default function Send({ onBack, onNavigate }: SendProps) {
   const { currentNetwork, networks, switchNetwork, wallet } = useWalletStore()
   const { balance, loading, refreshBalance } = useBalance()
   const [recipient, setRecipient] = useState("")
   const [amount, setAmount] = useState("")
   const [showNetworkSelector, setShowNetworkSelector] = useState(false)
-  const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState<string | null>(null)
 
   const handleNetworkSelect = (networkId: string) => {
@@ -33,70 +34,25 @@ export default function Send({ onBack }: SendProps) {
       return
     }
 
-    // 验证地址格式
     if (!/^0x[a-fA-F0-9]{40}$/.test(recipient)) {
       setSendError("无效的地址格式")
       return
     }
 
-    // 检查余额
     if (amountNum > parseFloat(balance)) {
       setSendError("余额不足")
       return
     }
 
-    setSending(true)
-    setSendError(null)
-
-    try {
-      console.log("准备发送交易:", {
-        from: wallet.address,
-        to: recipient,
-        amount: amountNum,
-        balance
-      })
-
-      // 通过 runtime.sendMessage 发送给 background
-      const valueWei = BigInt(Math.floor(amountNum * 1e18)).toString(16)
-      console.log("交易金额 (Wei):", "0x" + valueWei)
-
-      const response = await chrome.runtime.sendMessage({
-        type: "SEND_ETH",
-        params: [
-          {
-            from: wallet.address,
-            to: recipient,
-            value: "0x" + valueWei
-          }
-        ]
-      })
-
-      console.log("Background 响应:", response)
-
-      if (response?.hash) {
-        console.log("交易成功! 哈希:", response.hash)
-        setSendError(null)
-        setRecipient("")
-        setAmount("")
-        alert(`交易发送成功！\n哈希: ${response.hash}`)
-        onBack()
-      } else if (response?.success && response.result) {
-        console.log("交易成功:", response.result)
-        setSendError(null)
-        setRecipient("")
-        setAmount("")
-        onBack()
-      } else {
-        const errorMsg = response?.error?.message || "发送交易失败"
-        console.error("交易失败:", errorMsg)
-        throw new Error(errorMsg)
-      }
-    } catch (error: any) {
-      console.error("发送交易异常:", error)
-      setSendError(error.message || "发送交易失败")
-    } finally {
-      setSending(false)
+    const valueWei = BigInt(Math.floor(amountNum * 1e18)).toString(16)
+    const txParams = {
+      from: wallet.address,
+      to: recipient,
+      value: "0x" + valueWei
     }
+
+    await chrome.storage.local.set({ transactionRequest: txParams })
+    onNavigate?.("transaction")
   }
 
   return (
@@ -227,9 +183,9 @@ export default function Send({ onBack }: SendProps) {
       {/* 发送按钮 */}
       <button
         onClick={handleSend}
-        disabled={sending || !recipient || !amount}
+        disabled={!recipient || !amount}
         className="w-full py-2.5 px-4 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
-        {sending ? "发送中..." : "发送"}
+        确认
       </button>
     </div>
   )

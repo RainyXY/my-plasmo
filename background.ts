@@ -1,4 +1,5 @@
 import * as ethers from "ethers"
+import { browser } from "wxt/browser"
 
 import { Storage } from "@plasmohq/storage"
 
@@ -51,15 +52,24 @@ export async function getWalletData(): Promise<WalletStoreData | null> {
   return data.state as WalletStoreData
 }
 
-// 5. 发送 ETH（核心！自研钱包签名交易）
 // ==============================
+// 待处理的交易请求
+// ==============================
+let pendingTransaction: {
+  from: string
+  to: string
+  value: string
+  origin: string
+  resolve?: (value: any) => void
+  reject?: (error: any) => void
+} | null = null
+
 export async function sendTransaction(params: {
   from: string
   to: string
   value: string
 }) {
   const walletData = await getWalletData()
-  console.log("walletData: ", walletData)
 
   if (!walletData) {
     throw new Error("未创建钱包")
@@ -122,6 +132,9 @@ export async function sendTransaction(params: {
 // ==============================
 // 监听前端消息
 // ==============================
+browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log("[Background] 收到消息333333333:", message)
+})
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   console.log("[Background] 收到消息:", msg)
   console.log("sendResponse: ", msg, sender, sendResponse)
@@ -131,6 +144,55 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         const txParams = msg.params?.[0]
         sendResponse(await sendTransaction(txParams))
         break
+
+      case "SHOW_TRANSACTION_CONFIRM":
+        pendingTransaction = {
+          from: msg.params.from,
+          to: msg.params.to,
+          value: msg.params.value,
+          origin: msg.params.origin
+        }
+        await chrome.storage.local.set({ currentRoute: "transaction" })
+        await chrome.storage.local.set({
+          transactionRequest: pendingTransaction
+        })
+        sendResponse({ success: true })
+        break
+
+      case "CONFIRM_TRANSACTION":
+        if (pendingTransaction) {
+          try {
+            const result = await sendTransaction(pendingTransaction)
+            pendingTransaction = null
+            await chrome.storage.local.set({ currentRoute: "show" })
+            await chrome.storage.local.set({ transactionRequest: null })
+            sendResponse({ success: true, result })
+          } catch (error: any) {
+            pendingTransaction = null
+            await chrome.storage.local.set({ currentRoute: "show" })
+            await chrome.storage.local.set({ transactionRequest: null })
+            sendResponse({ success: false, error: { message: error.message } })
+          }
+        } else {
+          sendResponse({
+            success: false,
+            error: { message: "没有待处理的交易" }
+          })
+        }
+        break
+
+      case "REJECT_TRANSACTION":
+        pendingTransaction = null
+        await chrome.storage.local.set({ currentRoute: "show" })
+        await chrome.storage.local.set({ transactionRequest: null })
+        sendResponse({ success: true })
+        break
+
+      case "GET_TRANSACTION_REQUEST":
+        const req = await chrome.storage.local.get("transactionRequest")
+        sendResponse(req.transactionRequest || null)
+        break
+
       default:
         sendResponse(null)
     }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 
+import ConfirmTransaction from "~pages/ConfirmTransaction"
 import CreateWallet from "~pages/CreateWallet"
 import ImportWallet from "~pages/ImportWallet"
 import NetworksPage from "~pages/NetworksPage"
@@ -19,6 +20,7 @@ export default function Popup() {
   const [currentRoute, setCurrentRoute] = useState<PopupRoute>("main")
   const [message, setMessage] = useState("")
   const [response, setResponse] = useState("")
+  const [transactionRequest, setTransactionRequest] = useState<any>(null)
 
   // 页面加载时检查是否已有钱包
   useEffect(() => {
@@ -26,6 +28,17 @@ export default function Popup() {
       setCurrentRoute("show")
     }
   }, [wallet])
+
+  // 加载交易请求
+  useEffect(() => {
+    if (currentRoute === "transaction") {
+      chrome.storage.local.get("transactionRequest").then((result) => {
+        if (result.transactionRequest) {
+          setTransactionRequest(result.transactionRequest)
+        }
+      })
+    }
+  }, [currentRoute])
 
   const onNavigate = (route: PopupRoute) => {
     setCurrentRoute(route)
@@ -84,7 +97,7 @@ export default function Popup() {
   }
 
   if (currentRoute === "send") {
-    return <Send onBack={() => onBack("show")} />
+    return <Send onBack={() => onBack("show")} onNavigate={onNavigate} />
   }
 
   if (currentRoute === "receive") {
@@ -97,6 +110,22 @@ export default function Popup() {
 
   if (currentRoute === "nfts") {
     return <NFTs onBack={() => onBack("show")} />
+  }
+
+  if (currentRoute === "transaction" && transactionRequest) {
+    return (
+      <ConfirmTransaction
+        request={transactionRequest}
+        onConfirm={() => {
+          setTransactionRequest(null)
+          onBack("show")
+        }}
+        onReject={() => {
+          setTransactionRequest(null)
+          onBack("show")
+        }}
+      />
+    )
   }
 
   return (

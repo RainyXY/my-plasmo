@@ -22,6 +22,7 @@
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "unstated-next": "^1.1.0",
+    "wxt": "^0.20.25",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
