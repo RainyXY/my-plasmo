@@ -73,7 +73,14 @@ export default function Send({ onBack }: SendProps) {
 
       console.log("Background 响应:", response)
 
-      if (response?.success && response.result) {
+      if (response?.hash) {
+        console.log("交易成功! 哈希:", response.hash)
+        setSendError(null)
+        setRecipient("")
+        setAmount("")
+        alert(`交易发送成功！\n哈希: ${response.hash}`)
+        onBack()
+      } else if (response?.success && response.result) {
         console.log("交易成功:", response.result)
         setSendError(null)
         setRecipient("")

@@ -103,11 +103,16 @@ export async function sendTransaction(params: {
       to: params.to,
       value: params.value,
       gasLimit: 21000,
-      gasPrice: ethers.parseUnits("1", "gwei")
+      gasPrice: ethers.parseUnits("0.1", "gwei")
     })
     console.log("交易哈希:", tx.hash)
     console.log("交易详情:", tx)
-    return tx
+    return {
+      hash: tx.hash,
+      from: tx.from,
+      to: tx.to,
+      value: tx.value.toString()
+    }
   } catch (error: any) {
     console.error("[Background] 交易发送失败:", error)
     throw error
