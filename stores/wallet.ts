@@ -1,10 +1,24 @@
 import * as bip39 from "bip39"
 import { HDNodeWallet, JsonRpcProvider } from "ethers"
 import { create } from "zustand"
-import { persist, createJSONStorage } from "zustand/middleware"
+import { createJSONStorage, persist } from "zustand/middleware"
 
 import type { Network } from "~types"
 import { DEFAULT_NETWORKS } from "~types"
+
+interface NFT {
+  contractAddress: string
+  tokenId: string
+  name?: string
+  description?: string
+  image?: string
+  metadata?: any
+}
+
+interface NFTCollection {
+  contractAddress: string
+  nfts: NFT[]
+}
 
 const chromeStorage = {
   getItem: async (name: string): Promise<string | null> => {
@@ -27,6 +41,7 @@ interface WalletStore {
   networks: Network[]
   isLocked: boolean
   password: string | null
+  nftCollections: NFTCollection[]
   setMnemonic: (mnemonic: string | null) => void
   setAddress: (address: string | null) => void
   setWallet: (wallet: HDNodeWallet | null) => void
@@ -34,6 +49,9 @@ interface WalletStore {
   addNetwork: (network: Network) => void
   switchNetwork: (networkId: string) => void
   setPassword: (password: string | null) => void
+  addNFT: (nft: NFT) => void
+  removeNFT: (contractAddress: string, tokenId: string) => void
+  getProvider: () => JsonRpcProvider | null
   createWallet: () => Promise<void>
   unlockWallet: (password: string) => Promise<boolean>
   lockWallet: () => Promise<void>
@@ -49,21 +67,88 @@ export const useWalletStore = create<WalletStore>()(
       networks: DEFAULT_NETWORKS,
       isLocked: false,
       password: null,
+      nftCollections: [],
       setMnemonic: (mnemonic) => set({ mnemonic }),
       setAddress: (address) => set({ address }),
       setWallet: (wallet) => set({ wallet }),
       setCurrentNetwork: (network) => set({ currentNetwork: network }),
       setPassword: (password) => set({ password }),
       addNetwork: (network: Network) => {
-        set(state => ({
+        set((state) => ({
           networks: [...state.networks, network]
         }))
       },
       switchNetwork: (networkId: string) => {
         const state = get()
-        const network = state.networks.find(net => net.id === networkId)
+        const network = state.networks.find((net) => net.id === networkId)
         if (network) {
           set({ currentNetwork: network })
+        }
+      },
+      addNFT: (nft: NFT) => {
+        set((state) => {
+          const collection = state.nftCollections.find(
+            (col) =>
+              col.contractAddress.toLowerCase() ===
+              nft.contractAddress.toLowerCase()
+          )
+          console.log("collection3333: ", collection)
+          if (collection) {
+            const existingNFT = collection.nfts.find(
+              (n) => n.tokenId === nft.tokenId
+            )
+            if (!existingNFT) {
+              return {
+                nftCollections: state.nftCollections.map((col) =>
+                  col.contractAddress.toLowerCase() ===
+                  nft.contractAddress.toLowerCase()
+                    ? { ...col, nfts: [...col.nfts, nft] }
+                    : col
+                )
+              }
+            }
+            return state
+          } else {
+            return {
+              nftCollections: [
+                ...state.nftCollections,
+                {
+                  contractAddress: nft.contractAddress,
+                  nfts: [nft]
+                }
+              ]
+            }
+          }
+        })
+      },
+      removeNFT: (contractAddress: string, tokenId: string) => {
+        set((state) => ({
+          nftCollections: state.nftCollections
+            .map((collection) =>
+              collection.contractAddress.toLowerCase() ===
+              contractAddress.toLowerCase()
+                ? {
+                    ...collection,
+                    nfts: collection.nfts.filter(
+                      (nft) => nft.tokenId !== tokenId
+                    )
+                  }
+                : collection
+            )
+            .filter((collection) => collection.nfts.length > 0)
+        }))
+      },
+      getProvider: () => {
+        const state = get()
+        try {
+          const provider = new JsonRpcProvider(state.currentNetwork.rpcUrl, {
+            name: state.currentNetwork.name,
+            chainId: state.currentNetwork.chainId
+          })
+          return provider
+        } catch (error) {
+          console.error("Failed to create provider:", error)
+          return null
         }
       },
       createWallet: async () => {
@@ -97,7 +182,8 @@ export const useWalletStore = create<WalletStore>()(
         wallet: state.wallet,
         currentNetwork: state.currentNetwork,
         networks: state.networks,
-        password: state.password
+        password: state.password,
+        nftCollections: state.nftCollections
       })
     }
   )
