@@ -33,6 +33,7 @@ export default function Receive({ onBack, onNavigate }: ReceiveProps) {
 
       <div className="bg-white flex flex-col items-center">
         {address && <QRCodeSVG value={address} size={160} level="M" />}
+        <div className="text-xs text-gray-500 mt-2">扫描二维码获取地址</div>
 
         <div className="mt-4 w-full p-4 rounded-lg border border-gray-200">
           <div className="text-xs text-gray-500 mb-1">收款地址</div>
