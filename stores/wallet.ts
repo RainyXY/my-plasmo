@@ -3,7 +3,7 @@ import { HDNodeWallet, JsonRpcProvider } from "ethers"
 import { create } from "zustand"
 import { createJSONStorage, persist } from "zustand/middleware"
 
-import type { Network } from "~types"
+import type { Network, Token } from "~types"
 import { DEFAULT_NETWORKS } from "~types"
 
 interface NFT {
@@ -42,6 +42,7 @@ interface WalletStore {
   isLocked: boolean
   password: string | null
   nftCollections: NFTCollection[]
+  tokens: Token[]
   setMnemonic: (mnemonic: string | null) => void
   setAddress: (address: string | null) => void
   setWallet: (wallet: HDNodeWallet | null) => void
@@ -51,6 +52,8 @@ interface WalletStore {
   setPassword: (password: string | null) => void
   addNFT: (nft: NFT) => void
   removeNFT: (contractAddress: string, tokenId: string) => void
+  addToken: (token: Token) => void
+  removeToken: (address: string, networkId: string) => void
   getProvider: () => JsonRpcProvider | null
   createWallet: () => Promise<void>
   unlockWallet: (password: string) => Promise<boolean>
@@ -68,6 +71,7 @@ export const useWalletStore = create<WalletStore>()(
       isLocked: false,
       password: null,
       nftCollections: [],
+      tokens: [],
       setMnemonic: (mnemonic) => set({ mnemonic }),
       setAddress: (address) => set({ address }),
       setWallet: (wallet) => set({ wallet }),
@@ -138,6 +142,30 @@ export const useWalletStore = create<WalletStore>()(
             .filter((collection) => collection.nfts.length > 0)
         }))
       },
+      addToken: (token: Token) => {
+        set((state) => {
+          const existingToken = state.tokens.find(
+            (t) =>
+              t.address.toLowerCase() === token.address.toLowerCase() &&
+              t.networkId === token.networkId
+          )
+          if (existingToken) {
+            return state
+          }
+          return { tokens: [...state.tokens, token] }
+        })
+      },
+      removeToken: (address: string, networkId: string) => {
+        set((state) => ({
+          tokens: state.tokens.filter(
+            (t) =>
+              !(
+                t.address.toLowerCase() === address.toLowerCase() &&
+                t.networkId === networkId
+              )
+          )
+        }))
+      },
       getProvider: () => {
         const state = get()
         try {
@@ -183,7 +211,8 @@ export const useWalletStore = create<WalletStore>()(
         currentNetwork: state.currentNetwork,
         networks: state.networks,
         password: state.password,
-        nftCollections: state.nftCollections
+        nftCollections: state.nftCollections,
+        tokens: state.tokens
       })
     }
   )

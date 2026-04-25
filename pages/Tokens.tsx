@@ -1,3 +1,4 @@
+import { Contract } from "ethers"
 import { useState } from "react"
 
 import { useWalletStore } from "~stores/wallet"
@@ -7,27 +8,69 @@ interface TokensProps {
 }
 
 export default function Tokens({ onBack }: TokensProps) {
-  const { currentNetwork, networks } = useWalletStore()
+  const { currentNetwork, networks, tokens, addToken, getProvider } =
+    useWalletStore()
   const [showAddForm, setShowAddForm] = useState(false)
   const [showNetworkSelector, setShowNetworkSelector] = useState(false)
   const [tokenAddress, setTokenAddress] = useState("")
   const [selectedNetworkId, setSelectedNetworkId] = useState(currentNetwork.id)
+  const [isLoading, setIsLoading] = useState(false)
 
   const selectedNetwork =
     networks.find((n) => n.id === selectedNetworkId) || currentNetwork
+
+  const networkTokens = tokens.filter((t) => t.networkId === selectedNetworkId)
 
   const handleNetworkSelect = (networkId: string) => {
     setSelectedNetworkId(networkId)
     setShowNetworkSelector(false)
   }
 
-  const handleAddToken = () => {
+  const handleAddToken = async () => {
     if (!tokenAddress) {
       return
     }
-    console.log("添加代币:", { networkId: selectedNetworkId, tokenAddress })
-    setShowAddForm(false)
-    setTokenAddress("")
+    setIsLoading(true)
+    try {
+      const provider = getProvider()
+      if (!provider) {
+        console.error("Failed to get provider")
+        setIsLoading(false)
+        return
+      }
+
+      const tokenContract = new Contract(
+        tokenAddress,
+        [
+          "function name() view returns (string)",
+          "function symbol() view returns (string)",
+          "function decimals() view returns (uint8)"
+        ],
+        provider
+      )
+
+      const [name, symbol, decimals] = await Promise.all([
+        tokenContract.name(),
+        tokenContract.symbol(),
+        tokenContract.decimals()
+      ])
+
+      addToken({
+        address: tokenAddress,
+        name,
+        symbol,
+        decimals: Number(decimals),
+        networkId: selectedNetworkId
+      })
+
+      setShowAddForm(false)
+      setTokenAddress("")
+    } catch (error) {
+      console.error("Failed to add token:", error)
+      alert("添加代币失败，请检查合约地址是否正确")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -109,17 +152,39 @@ export default function Tokens({ onBack }: TokensProps) {
 
           <button
             onClick={handleAddToken}
-            disabled={!tokenAddress}
+            disabled={!tokenAddress || isLoading}
             className="w-full py-2.5 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
-            添加代币
+            {isLoading ? "添加中..." : "添加代币"}
           </button>
         </div>
       ) : (
-        <div className="text-sm text-gray-500 text-center py-8">
-          <div className="mb-3">暂无代币</div>
-          <div className="text-xs text-gray-400">
-            点击右上角"添加"按钮添加代币
-          </div>
+        <div>
+          {networkTokens.length > 0 ? (
+            <div className="space-y-2">
+              {networkTokens.map((token) => (
+                <div
+                  key={`${token.networkId}-${token.address}`}
+                  className="bg-white border border-gray-200 rounded-lg p-3 flex items-center justify-between">
+                  <div>
+                    <div className="font-medium text-gray-900">
+                      {token.symbol}
+                    </div>
+                    <div className="text-xs text-gray-500">{token.name}</div>
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {token.address.slice(0, 6)}...{token.address.slice(-4)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-sm text-gray-500 text-center py-8">
+              <div className="mb-3">暂无代币</div>
+              <div className="text-xs text-gray-400">
+                点击右上角"添加"按钮添加代币
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

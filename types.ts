@@ -10,6 +10,15 @@ export interface Network {
   currency: string
 }
 
+export interface Token {
+  address: string
+  symbol: string
+  name: string
+  decimals: number
+  networkId: string
+  logoUrl?: string
+}
+
 export const DEFAULT_NETWORKS: Network[] = [
   {
     id: "eth-mainnet",
