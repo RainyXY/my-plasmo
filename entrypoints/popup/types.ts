@@ -80,15 +80,15 @@ export interface AuthRequest {
 export interface SignRequest {
   requestId: string
   origin: string
-  method: string
+  method: string // 'eth_sign' | 'personal_sign' | 'eth_signTypedData' | 'eth_signTypedData_v3' | 'eth_signTypedData_v4'
   address: string
-  message?: string
+  message?: string // 用于 eth_sign 和 personal_sign
   typedData?: {
     domain: any
     types: any
     message: any
     primaryType?: string
-  }
+  } // 用于 EIP-712 签名
   timestamp: number
 }
 
@@ -108,7 +108,7 @@ export interface SwitchChainRequest {
 export interface TransactionRequest {
   requestId: string
   origin: string
-  method: string
+  method: string // 'eth_sendTransaction' | 'eth_signTransaction'
   transaction: {
     from?: string
     to?: string
